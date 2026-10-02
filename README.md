@@ -1,44 +1,90 @@
-# Portfolio — Dark Neon-Green Racing Theme
+<div align="center">
 
-AI developer portfolio built with Next.js 16 (App Router), TypeScript, and Tailwind CSS v4. Dark theme, green night-neon palette, subtle motorsport accents, and a custom trailing-glow cursor.
+# Portfolio
 
-## Getting Started
+**Dark neon-green racing theme** · Next.js 16 · TypeScript · Tailwind CSS v4
+
+</div>
+
+---
+
+## Quick start
 
 ```bash
+npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [localhost:3000](http://localhost:3000).
 
-## Known issues & engineering log
+## Scripts
 
-[`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) records past bugs — symptom, root
-cause, fix, and the rule that prevents a repeat. **Read it before changing the
-animation or glass layer** (`RibbonTrail`, `.glass-card`, `backdrop-filter`).
+| Command         | Purpose                  |
+| --------------- | ------------------------ |
+| `npm run dev`   | Local dev server         |
+| `npm run build` | Production build         |
+| `npm start`     | Serve the production build |
+| `npm run lint`  | ESLint                   |
 
 ## Editing content
 
-All copy — profile, experience, projects, skills, blog posts, certificates — lives in [`data/content.ts`](data/content.ts). Swap the placeholder values there; no component changes needed.
+All copy — profile, experience, projects, skills, certificates — lives in a single file:
+
+```
+data/content.ts
+```
+
+Swap the placeholder values there. No component changes needed.
 
 ## Structure
 
-- `app/layout.tsx` — fonts, metadata, mounts `RibbonTrail`, `LiquidGlassFilter`, `SignatureIntro`, `CustomCursor`, `Header`
-- `app/page.tsx` — composes all sections
-- `components/cursor/CustomCursor.tsx` — trailing neon glow dot + ring, disabled on touch devices
-- `components/ui/RibbonTrail.tsx` — WebGL cursor ribbon (ogl). See `docs/KNOWN_ISSUES.md#001` before editing
-- `components/ui/` — `SectionHeading`, `RevealOnScroll`, `CheckeredAccent`, `PlaceholderTile`, `MapTile`, `SignatureIntro`
-- `components/sections/` — `Hero`, `Expertise`, `Experience`, `Projects`, `Journey`, `Contact`
+```
+app/
+  layout.tsx          Fonts, metadata, mounts the global UI layer
+  page.tsx             Composes all sections
+  api/contact/          Contact form endpoint → Supabase
 
-## Build
+components/
+  cursor/               Trailing neon-glow cursor (fine-pointer only)
+  ui/                   RibbonTrail, SignatureIntro, glass cards, etc.
+  sections/             Hero, Expertise, Experience, Projects, Journey, Contact
 
-```bash
-npm run build
+data/
+  content.ts            All site copy, in one place
+
+docs/
+  KNOWN_ISSUES.md        Engineering log — read before touching animation/glass
+
+supabase/
+  messages.sql           Contact-table schema (run once in Supabase SQL editor)
 ```
 
-## Deploy to Vercel
+## Environment
 
-1. Push this repo to GitHub.
-2. Go to [vercel.com/new](https://vercel.com/new), import the repo, and deploy — Next.js is auto-detected, no config needed.
-3. Add a custom domain in the Vercel project's Settings → Domains once deployed.
+Copy `.env.example` → `.env.local`:
 
-Alternatively, from the CLI: `npx vercel` (or `npx vercel --prod` for a production deploy) after running `vercel login`.
+```bash
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your-publishable-or-anon-key
+```
+
+Both values come from Supabase → Project Settings → API. Add the same two in Vercel → Project → Settings → Environment Variables for production.
+
+## Before touching animation or glass
+
+Read [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md) first — it records past bugs in `RibbonTrail`, `.glass-card`, and `backdrop-filter` with the rule that prevents each repeat.
+
+## Deploy
+
+**Vercel (recommended)**
+
+1. Push to GitHub.
+2. [vercel.com/new](https://vercel.com/new) → import the repo → deploy. Next.js is auto-detected.
+3. Add your Supabase env vars in the project's Settings → Environment Variables.
+
+**CLI**
+
+```bash
+npx vercel          # preview
+npx vercel --prod   # production
+```

@@ -1,20 +1,37 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 const HOVER_SELECTOR = "a, button, [data-cursor-hover], input, textarea, select";
+const POINTER_QUERY = "(pointer: fine)";
+
+function subscribeFinePointer(callback: () => void) {
+  const query = window.matchMedia(POINTER_QUERY);
+  query.addEventListener("change", callback);
+  return () => query.removeEventListener("change", callback);
+}
+
+function getFinePointerSnapshot() {
+  return window.matchMedia(POINTER_QUERY).matches;
+}
+
+function getFinePointerServerSnapshot() {
+  return false;
+}
 
 export default function CustomCursor() {
   const ringRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
-  const [enabled, setEnabled] = useState(false);
+  const isFinePointer = useSyncExternalStore(
+    subscribeFinePointer,
+    getFinePointerSnapshot,
+    getFinePointerServerSnapshot
+  );
   const [hovering, setHovering] = useState(false);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const isFinePointer = window.matchMedia("(pointer: fine)").matches;
     if (!isFinePointer) return;
-    setEnabled(true);
     document.documentElement.classList.add("has-custom-cursor");
 
     const mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
@@ -58,9 +75,9 @@ export default function CustomCursor() {
       cancelAnimationFrame(raf);
       document.documentElement.classList.remove("has-custom-cursor");
     };
-  }, []);
+  }, [isFinePointer]);
 
-  if (!enabled) return null;
+  if (!isFinePointer) return null;
 
   return (
     <>

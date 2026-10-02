@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { SIGNATURE_STROKES, SIGNATURE_VIEWBOX } from "@/components/ui/signaturePath";
 
@@ -51,19 +51,29 @@ const RIBBONS = [
   { color: "#12b5a5", width: 2.2, opacity: 0.75, lag: 0.03 },
 ];
 
-/** Earlier strokes settle back to this share of their opacity, never vanishing. */
-const DIM_TO = 0.5;
 const DIM_MS = 800;
+
+function subscribeTipSupport() {
+  return () => {};
+}
+
+function getTipSupportedSnapshot() {
+  return CSS.supports("offset-path", 'path("M0 0 L1 1")');
+}
+
+function getTipSupportedServerSnapshot() {
+  return false;
+}
 
 export default function SignatureIntro() {
   const [visible, setVisible] = useState(false);
   const [blending, setBlending] = useState(false);
-  const [tipSupported, setTipSupported] = useState(false);
+  const tipSupported = useSyncExternalStore(
+    subscribeTipSupport,
+    getTipSupportedSnapshot,
+    getTipSupportedServerSnapshot
+  );
   const reducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    setTipSupported(CSS.supports("offset-path", 'path("M0 0 L1 1")'));
-  }, []);
 
   useEffect(() => {
     // The browser restores the previous scroll position before this runs, so
@@ -78,7 +88,9 @@ export default function SignatureIntro() {
   useEffect(() => {
     if (reducedMotion) return;
     // Deliberately ungated: a sessionStorage "once per tab" gate meant reloads
-    // never replayed it, which read as the intro being broken.
+    // never replayed it, which read as the intro being broken. Mount-triggered
+    // animation kickoff (starts a setTimeout chain), not state synchronization.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisible(true);
 
     const prevOverflow = document.documentElement.style.overflow;
