@@ -11,7 +11,36 @@
 const MAX_NAME = 100;
 const MAX_MESSAGE = 4000;
 
+// In-memory per-IP throttle. Resets whenever the serverless instance recycles —
+// that's fine here: the goal is blunting scripted spam bursts, not a hard quota.
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const hits = new Map<string, { count: number; resetAt: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+
+  // Opportunistic cleanup so `hits` doesn't grow unbounded on a long-lived instance.
+  for (const [key, entry] of hits) {
+    if (entry.resetAt <= now) hits.delete(key);
+  }
+
+  const entry = hits.get(ip);
+  if (!entry || entry.resetAt <= now) {
+    hits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  entry.count += 1;
+  return entry.count > RATE_LIMIT_MAX;
+}
+
 export async function POST(request: Request) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (isRateLimited(ip)) {
+    return Response.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_ANON_KEY;
   if (!url || !key) {

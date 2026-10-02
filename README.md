@@ -66,9 +66,10 @@ Copy `.env.example` → `.env.local`:
 ```bash
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_ANON_KEY=your-publishable-or-anon-key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-Both values come from Supabase → Project Settings → API. Add the same two in Vercel → Project → Settings → Environment Variables for production.
+The Supabase values come from Supabase → Project Settings → API. `NEXT_PUBLIC_SITE_URL` drives `metadataBase`, `sitemap.xml`, and `robots.txt` — set it to your real production domain in Vercel → Project → Settings → Environment Variables once deployed.
 
 ## Before touching animation or glass
 

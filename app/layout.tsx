@@ -6,6 +6,7 @@ import SignatureIntro from "@/components/ui/SignatureIntro";
 import LiquidGlassFilter from "@/components/ui/LiquidGlassFilter";
 import RibbonTrail from "@/components/ui/RibbonTrail";
 import Header from "@/components/layout/Header";
+import { SITE_URL } from "@/lib/site";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -20,6 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Eshwar Gottupalli — AI/ML Engineer",
   description:
     "Portfolio of Eshwar Gottupalli, an AI/ML engineer working across computer vision, embedded systems, and LLM-powered applications.",
@@ -28,6 +30,8 @@ export const metadata: Metadata = {
     description:
       "Portfolio of Eshwar Gottupalli, an AI/ML engineer working across computer vision, embedded systems, and LLM-powered applications.",
     type: "website",
+    url: SITE_URL,
+    images: ["/images/signal-portrait.png"],
   },
 };
 
