@@ -1,0 +1,322 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg: #070907;
+  --color-bg-elevated: #0d120e;
+  --color-bg-soft: #10160f;
+  --color-neon: #39ff8f;
+  --color-neon-strong: #6dffb0;
+  --color-neon-dim: #1f7a4a;
+  --color-redline: #ff4433;
+  --color-text: #eaf3ec;
+  --color-text-muted: #8fa396;
+  --color-text-faint: #56685c;
+  --color-border: rgba(57, 255, 143, 0.14);
+  --color-border-strong: rgba(57, 255, 143, 0.32);
+
+  --font-display: var(--font-space-grotesk);
+  --font-mono-tel: var(--font-jetbrains-mono);
+}
+
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-bg-elevated: var(--color-bg-elevated);
+  --color-bg-soft: var(--color-bg-soft);
+  --color-neon: var(--color-neon);
+  --color-neon-strong: var(--color-neon-strong);
+  --color-neon-dim: var(--color-neon-dim);
+  --color-redline: var(--color-redline);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-text-faint: var(--color-text-faint);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --font-display: var(--font-display);
+  --font-mono-tel: var(--font-mono-tel);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Pitch dark. The ribbon trail is the only light source on the page. */
+  background: #000000;
+  /* Must live on the root, not body: `overflow-x` on body propagates to the
+     viewport and, combined with a fixed root height, left nothing scrollable. */
+  overflow-x: hidden;
+  /* Scrollbar hidden entirely — scroll behavior stays intact, just no visible track/thumb. */
+  scrollbar-width: none;
+}
+
+body {
+  /* Transparent: the cursor glow sits behind the content, and an opaque body
+     here would cover it and leave the glass with nothing to refract. */
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  position: relative;
+}
+
+/* ── Signature intro ───────────────────────────────────────────────────────
+ * Handwriting. Every stroke carries pathLength="1", so one dash rule draws any
+ * stroke regardless of its real length; per-stroke delay and duration come from
+ * the component, proportional to each stroke's share of total pen distance.
+ * Nearly linear easing — a pen keeps roughly constant speed mid-stroke.
+ */
+.sig-write {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes sig-write-run {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Settles a finished stroke back to half ITS OWN opacity — never to zero, so
+   earlier parts of the signature stay legible while the pen moves on. */
+@keyframes sig-dim {
+  to { opacity: calc(var(--sig-o) * 0.5); }
+}
+
+/* The travelling pen tip. offset-path drives it along the stroke's centreline. */
+.sig-tip {
+  offset-distance: 0%;
+  animation-name: sig-tip-run;
+  animation-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
+  animation-fill-mode: both;
+}
+
+@keyframes sig-tip-run {
+  0% { offset-distance: 0%; opacity: 0; }
+  8% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+@keyframes sig-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Journey ───────────────────────────────────────────────────────────────
+   Milestone labels drift on long, desynchronised cycles so the section feels
+   buoyant rather than pinned to a rule. */
+@keyframes journey-float {
+  from { transform: translateY(0); }
+  to { transform: translateY(-7px); }
+}
+
+.journey-float {
+  animation: journey-float 4.5s ease-in-out infinite alternate;
+}
+
+/*
+ * The bar's own heartbeat. The ribbon paths span two tiles with an integer
+ * number of wave cycles per tile, so shifting left by exactly one tile width
+ * (1000 user units) loops seamlessly. This runs on its own clock — the wave
+ * keeps moving whether or not the user is scrolling.
+ */
+.journey-wave {
+  animation: journey-wave-run 7s linear infinite;
+  will-change: transform;
+}
+
+@keyframes journey-wave-run {
+  from { transform: translateX(0); }
+  to { transform: translateX(-1000px); }
+}
+
+/* Faint structural grid over the black backdrop — gives the glass edges
+   something to bend, so refraction is legible even away from the cursor. */
+.page-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -9;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image:
+    linear-gradient(rgba(180, 255, 214, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 255, 214, 0.5) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+::selection {
+  background: var(--color-neon);
+  color: #04140a;
+}
+
+::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Hide native cursor only on fine-pointer devices; custom cursor takes over */
+@media (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+.text-glow {
+  text-shadow: 0 0 18px rgba(57, 255, 143, 0.45);
+}
+
+/* Ruler / telemetry divider — a measured line rather than a plain gradient.
+   Shared across hero tiles so their dividers read as one instrument system. */
+.ruler-line {
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-border-strong) 0px,
+    var(--color-border-strong) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+}
+
+.mono-tel {
+  font-family: var(--font-mono-tel), ui-monospace, monospace;
+  letter-spacing: 0.06em;
+}
+
+/*
+ * Liquid glass.
+ *
+ * Built as stacked layers rather than one blurred box:
+ *   ::before — the "bend" layer: backdrop-blur that is then warped by the
+ *              #glass-blur displacement filter, so the backdrop refracts.
+ *   box-shadow — the "face" (outer glow/depth) and "edge" (inner rim light)
+ *              layers combined, which is what actually reads as glass thickness.
+ *
+ * Deliberately untinted: the rim highlights carry the material, so the surface
+ * stays clear instead of turning into frosted grey. Every card/tile/bar/navbar
+ * uses this one class.
+ */
+.glass-card {
+  position: relative;
+  /* Barely-there tint: on a black page the material has to come from the edge
+     reflections and the refracted cursor light, not from a grey fill. */
+  background: rgba(255, 255, 255, 0.022);
+  backdrop-filter: blur(16px) saturate(190%);
+  box-shadow:
+    0 8px 32px -8px rgba(0, 0, 0, 0.7),
+    /* inner rim light — the "thickness" of the glass */
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
+    inset 1px 0 0 0 rgba(255, 255, 255, 0.06),
+    inset -1px 0 0 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+/*
+ * Edge reflection: a 1px specular ring, bright where light would catch the
+ * bevel and fading through the body of the card. Masked to the border box so
+ * it never tints or dims the content inside.
+ *
+ * Registering the angle as a real <angle> is what lets it *rotate* smoothly —
+ * an unregistered custom property is just a string and would jump.
+ */
+@property --glass-angle {
+  syntax: "<angle>";
+  /* MUST inherit. The gradient lives on ::after, and a pseudo-element takes
+     its values from the originating element by inheritance — a non-inheriting
+     property set on .glass-card would never reach ::after, which would then
+     fall back to initial-value and never move. */
+  inherits: true;
+  initial-value: 140deg;
+}
+
+.glass-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  opacity: var(--glass-sheen, 0.85);
+  background: linear-gradient(
+    var(--glass-angle, 140deg),
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0.14) 22%,
+    rgba(255, 255, 255, 0) 48%,
+    rgba(255, 255, 255, 0.06) 72%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  transition: --glass-angle 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease;
+}
+
+/*
+ * Hover sheen — the tile catches the light as the pointer rests on it.
+ *
+ * Deliberately pure CSS: no pointermove listener, no rAF, no layout reads.
+ * The cost is one gradient repaint on one element, and only on enter/leave —
+ * so it can never compete with RibbonTrail's render loop for frame budget.
+ * See docs/KNOWN_ISSUES.md #001–#003 for why that constraint exists.
+ *
+ * The long 0.55s transition is safe *here* precisely because the target is
+ * static: hovering sets one fixed angle, so the transition converges. A
+ * cursor-tracking version recomputes the target every ~16ms and must use a
+ * much shorter duration or it never settles (#003).
+ *
+ * Scoped to .glass-card-hover so plain .glass-card surfaces (the nav bar) stay
+ * static. Because --glass-angle inherits, nested glass — PlaceholderTile is a
+ * .glass-card inside card articles — sweeps along with its parent. That is
+ * intended: one light source, so every glass surface in the tile turns to the
+ * same angle together.
+ */
+.glass-card-hover:hover {
+  --glass-angle: 200deg;
+  --glass-sheen: 0.95;
+}
+
+/*
+ * SVG-displacement refraction (`backdrop-filter: url(#glass-blur)`) is
+ * deliberately NOT applied here.
+ *
+ * It looked great in isolation, but it does not survive contact with the
+ * ribbon: the trail animates behind every card, so each ribbon frame
+ * invalidates the backdrop of all ~29 glass surfaces, and each of those
+ * re-runs feTurbulence + feDisplacementMap. Chromium has no fast path for an
+ * SVG `url()` filter in backdrop-filter, so the cost lands on the main
+ * compositor every frame and the ribbon starves — it draws in bursts and
+ * vanishes between them.
+ *
+ * The plain `blur() saturate()` on .glass-card above is GPU-accelerated and
+ * carries the glass look on its own, alongside the rim highlights and
+ * shadows. If the refraction is ever wanted back, scope it to a handful of
+ * cards (e.g. the hero tiles only) rather than every surface on the page.
+ */
+
+.glass-card-hover {
+  transition: box-shadow 0.35s ease, transform 0.35s ease;
+}
+
+.glass-card-hover:hover {
+  box-shadow:
+    0 12px 40px -8px rgba(0, 0, 0, 0.7),
+    0 0 28px -6px rgba(57, 255, 143, 0.16),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.26),
+    inset 1px 0 0 0 rgba(255, 255, 255, 0.1),
+    inset -1px 0 0 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
